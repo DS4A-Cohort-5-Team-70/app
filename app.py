@@ -12,9 +12,9 @@ import flask
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
+server = flask.Flask(__name__) # define flask app.server
 
-
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets, server=server)
 
 server = app.server
 
