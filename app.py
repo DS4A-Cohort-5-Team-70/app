@@ -8,10 +8,13 @@ import dash_core_components as dcc
 import dash_html_components as html
 import plotly.express as px
 import pandas as pd
+import flask
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+server = flask.Flask(__name__) # define flask app.server
+
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets, server=server)
 
 # assume you have a "long-form" data frame
 # see https://plotly.com/python/px-arguments/ for more options
@@ -37,5 +40,4 @@ app.layout = html.Div(children=[
 ])
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8050)
     app.run_server(debug=True)
