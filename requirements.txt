@@ -3,5 +3,3 @@ pandas
 gunicorn
 psycopg2
 python-dotenv
-libpq-dev
-python-dev
