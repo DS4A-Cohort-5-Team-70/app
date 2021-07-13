@@ -3,4 +3,5 @@ pandas
 gunicorn
 psycopg2
 python-dotenv
-pg_config
+libpq-dev
+python-dev
