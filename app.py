@@ -38,10 +38,15 @@ database = 'raw'
 engine = pg.connect("host={} dbname={} user={} password={}".format(host, database, user, password))
 
 #Preparing the data
-df = psql.read_sql('SELECT * FROM asesor', engine)
+#df = psql.read_sql('SELECT * FROM asesor', engine)
 
-df.sort_values(by=['idfuncionario', 'fecha_retiro'], inplace=True)
-df_unique = df[df.duplicated(subset=['idfuncionario'], keep='last')]
+df = pd.read_csv('./data/asesor.csv',parse_dates=['Fecha_Ingreso_Operacion', 'Fecha_retiro', 'FechaNacimiento'], encoding='Latin1')
+df_encuesta = pd.read_csv('./data/encuesta.csv')
+print(df.head())
+print(df.info())
+
+df.sort_values(by=['IdFuncionario', 'Fecha_retiro'], inplace=True)
+df_unique = df[df.duplicated(subset=['IdFuncionario'], keep='last')]
 df_unique.reset_index(drop=True, inplace=True)
 column_names = df_unique.columns
 
@@ -76,7 +81,7 @@ app.layout = html.Div([
     Output("histogram", "figure"), 
     Input("x_value", "value"))
 def update_chart(x_value):
-    fig = px.histogram(df_unique, x=x_value, color="segmento")
+    fig = px.histogram(df_unique, x=x_value, color="Segmento")
     return fig
 
 if __name__ == '__main__':
