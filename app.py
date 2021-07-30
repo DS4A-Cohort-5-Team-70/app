@@ -165,7 +165,7 @@ main_view = html.Div([
                     dcc.Dropdown(
                     id="x_value",
                     options=[{"label": columns, "value": columns} for columns in columns_names],
-                    value=columns_names[10],
+                    value=columns_names[6],
                     multi=False)
                 ], className='col-6')
             ], className="row justify-content-center"),
