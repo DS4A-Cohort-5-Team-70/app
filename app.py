@@ -6,7 +6,7 @@
 #Envioromental variables
 import os
 from dash_html_components.Div import Div
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
 #Dash
 import dash
 import dash_core_components as dcc
@@ -19,8 +19,8 @@ import seaborn as sns
 #Pandas
 import pandas as pd
 #Postgres SQL
-import psycopg2 as pg
-import pandas.io.sql as psql
+#import psycopg2 as pg
+#import pandas.io.sql as psql
 
 #Creates dash app
 app = dash.Dash(
@@ -37,14 +37,14 @@ server = app.server
 # Getting the data -------------------------------------------------------------------------------------
 
 #Loads env variables
-load_dotenv()
+""" load_dotenv()
 user = os.getenv('DB_MASTER_USER')
 password = os.getenv('DB_PASSWORD')
 host = os.getenv('DB_ENDPOINT')
-database = 'raw'
+database = 'raw' """
 
 #Creating the connection
-engine = pg.connect("host={} dbname={} user={} password={}".format(host, database, user, password))
+""" engine = pg.connect("host={} dbname={} user={} password={}".format(host, database, user, password)) """
 
 #Preparing the data
 #df = psql.read_sql('SELECT * FROM asesor', engine)
