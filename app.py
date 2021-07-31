@@ -52,7 +52,6 @@ database = 'raw' """
 #df = pd.read_csv('./data/asesor.csv',parse_dates=['Cosecha_Liquidacion', 'Fecha_Ingreso_Operacion', 'Fecha_retiro', 'FechaNacimiento'], encoding='Latin1')
 #df_encuesta = pd.read_csv('./data/encuesta.csv')
 
-
 data_raw = pd.read_csv('./data/asesor.csv',parse_dates=['Cosecha_Liquidacion', 'Fecha_Ingreso_Operacion', 'Fecha_retiro', 'FechaNacimiento'], encoding='Latin1')
 data_encuesta = pd.read_csv('data/encuesta.csv', parse_dates=['FechaRegistro', 'Fecha_Retiro'], encoding='Latin1')
 
@@ -140,8 +139,8 @@ sidebar = html.Div(
             dbc.Nav(
                 [
                     dbc.NavLink("Inicio", href="/", active="exact"),
-                    dbc.NavLink("Página 1", href="/page-1", active="exact"),
-                    dbc.NavLink("Página 2", href="/page-2", active="exact"),
+                    dbc.NavLink("Predicciones", href="/page-1", active="exact"),
+                    dbc.NavLink("Detalles", href="/page-2", active="exact"),
                 ],
                 vertical=True,
                 pills=True,
@@ -151,10 +150,91 @@ sidebar = html.Div(
     ],
     id="sidebar",
 )
+page_2 =  html.Div([
+    #id, nombre, prob
+    html.Div([
 
-main_view = html.Div([
-    
+        html.Div([html.Label('Estimaciones'),
+            dcc.RadioItems(
+                options=[
+                    {'label': '1 mes', 'value': 'NYC'},
+                    {'label': u'2 meses', 'value': 'MTL'},
+                    {'label': '3 meses', 'value': 'SF'}
+                ],
+                value='MTL'
+            ),
+        ], className="col-2"),
+
+        html.Div([
             html.Div([
+                html.H4("ID", className="col-4"),
+                html.H4("Nombre", className="col-4"),
+                html.H4("Probabilidad", className="col-4"),
+            ], className="row")
+
+        ], className="col-10"),
+    ], className="row")
+], className="container")
+main_view = html.Div([
+
+    html.Div([
+
+html.Div([
+    html.Label('Empleado'),
+    dcc.Dropdown(
+        options=[
+            {'label': '54345', 'value': 'NYC'},
+            {'label': u'9742', 'value': 'MTL'},
+            {'label': '87567', 'value': 'SF'}
+        ],
+        value='MTL'
+    ),
+
+    html.Label('Multi-Select Dropdown'),
+    dcc.Dropdown(
+        options=[
+            {'label': 'New York City', 'value': 'NYC'},
+            {'label': u'Montréal', 'value': 'MTL'},
+            {'label': 'San Francisco', 'value': 'SF'}
+        ],
+        value=['MTL', 'SF'],
+        multi=True
+    ),
+
+    html.Label('Radio Items'),
+    dcc.RadioItems(
+        options=[
+            {'label': 'New York City', 'value': 'NYC'},
+            {'label': u'Montréal', 'value': 'MTL'},
+            {'label': 'San Francisco', 'value': 'SF'}
+        ],
+        value='MTL'
+    ),
+
+    html.Label('Checkboxes'),
+    dcc.Checklist(
+        options=[
+            {'label': 'New York City', 'value': 'NYC'},
+            {'label': u'Montréal', 'value': 'MTL'},
+            {'label': 'San Francisco', 'value': 'SF'}
+        ],
+        value=['MTL', 'SF']
+    ),
+
+    html.Label('Text Input'),
+    dcc.Input(value='MTL', type='text'),
+
+    html.Label('Slider'),
+    dcc.Slider(
+        min=0,
+        max=9,
+        marks={i: 'Label {}'.format(i) if i == 1 else str(i) for i in range(1, 6)},
+        value=5,
+    ),
+], className="col-2"),
+
+html.Div([
+html.Div([
                 html.Div(
                     html.H3('An interactive plot')
                 , className="col-12 text-center mb-3")   
@@ -223,6 +303,11 @@ main_view = html.Div([
                     dcc.Graph(id="count_estado", figure=px.histogram(merged_asesor, x="Estado"))
                 , className="col-lg-6 col-sm-12"),       
             ], className="row"),
+
+], className="col-10")
+
+    ], className="row")
+
     
     #dcc.Graph(id="count_num_rot", figure=px.histogram(merged_asesor, x="num_rot")),
     #dcc.Graph(id="count_edad", figure=px.histogram(merged_asesor, x="Edad"))
@@ -252,7 +337,7 @@ def render_page_content(pathname):
     if pathname == "/":
         return main_view
     elif pathname == "/page-1":
-        return html.P("This is the content of page 1. Yay!")
+        return page_2
     elif pathname == "/page-2":
         return html.P("Oh cool, this is page 2!")
     # If the user tries to reach a different page, return a 404 message
@@ -293,7 +378,7 @@ def toggle_collapse(n, is_open):
     Output("histogram", "figure"), 
     [Input("x_value", "value")])
 def update_chart(x_value):
-    fig = px.histogram(df_unique, x=x_value, color="Segmento")
+    fig = px.histogram(df_unique, x=x_value, color="LineaNegocio")
     return fig
 
 if __name__ == '__main__':

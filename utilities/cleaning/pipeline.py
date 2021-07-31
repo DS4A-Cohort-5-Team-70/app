@@ -37,6 +37,8 @@ def preprocessing(df_):
     #TODO: Preguntarle a Refinancia sobre esos registros
     data_raw.at[[10184, 13768, 13966],'CantidadHijos'] = 1
 
+    #TODO: Id funcionario a categórica
+
 
 
 

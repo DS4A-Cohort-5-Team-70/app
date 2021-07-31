@@ -72,3 +72,7 @@ def swap_day_month(IDs, df):
     apply(lambda d: pd.to_datetime(str(d.year)+"-"+str(d.day)+"-"+str(d.month), format="%Y-%m-%d"))
     df.loc[dates.index, 'Fecha_retiro'] = dates
     return df
+def delete_first_fecha_retiro(IDs, df):
+    for id in ids_delete_fechaRetiro:
+        dates = data_raw[data_raw["IdFuncionario"]==id]["Fecha_retiro"].dropna()
+        data_raw.loc[list(dates.index)[0], 'Fecha_retiro'] = np.nan
