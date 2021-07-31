@@ -15,7 +15,9 @@ def preprocessing(df_):
     data_raw["Cosecha_Ingreso_Operacion"] = pd.to_datetime(data_raw["Cosecha_Ingreso_Operacion"], format='%Y%m')
     data_raw["Cosecha_Liquidacion"] = pd.to_datetime(data_raw["Cosecha_Liquidacion"], format='%Y%m')
 
-    #TODO: 9801, 13554 sólo tiene un registro. Eliminar.
+    #DONE: 9801, 13554 sólo tiene un registro. Eliminar.
+    data_raw.drop(index=[9801, 13554], inplace=True)
+    
     #TODO: ID's: 10247, 10287, 10366, 10453, 11648, 11717, 11720, 11722, 11925 Swap día-mes
     #TODO: ID's: 9356, 10102, 10431, 11928, 13430 imputarlos. Otra fecha ingreso con sentido.
 
