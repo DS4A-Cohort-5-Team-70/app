@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from datetime import datetime
+from support import swap_day_month
 
 # Lee de ingestion
 def load_data():
@@ -15,10 +16,13 @@ def preprocessing(df_):
     data_raw["Cosecha_Ingreso_Operacion"] = pd.to_datetime(data_raw["Cosecha_Ingreso_Operacion"], format='%Y%m')
     data_raw["Cosecha_Liquidacion"] = pd.to_datetime(data_raw["Cosecha_Liquidacion"], format='%Y%m')
 
-    #DONE: 9801, 13554 sólo tiene un registro. Eliminar.
+    #DONE: 9801, 13554 sólo tiene un registro y sus fechas de ingreso no tienen sentido. Eliminar.
     data_raw.drop(index=[9801, 13554], inplace=True)
     
-    #TODO: ID's: 10247, 10287, 10366, 10453, 11648, 11717, 11720, 11722, 11925 Swap día-mes
+    #DONE: ID's: 10247, 10287, 10366, 10453, 11648, 11717, 11720, 11722, 11925 Swap día-mes
+    IDs_for_swapping = [10247, 10287, 10366, 10453, 11648, 11717, 11720, 11722, 11925]
+    data_raw = swap_day_month(IDs_for_swapping, data_raw)
+    
     #TODO: ID's: 9356, 10102, 10431, 11928, 13430 imputarlos. Otra fecha ingreso con sentido.
 
     # Columna edad calculada a principio de cada mes
