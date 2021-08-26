@@ -1,10 +1,3 @@
-dash
-dash_core_components
-dash_html_components
-plotly
-pandas
-gunicorn
-psycopg2
-python-dotenv
-dash-bootstrap-components
-seaborn
+python-dateutil==2.7.3
+dash==1.21.0
+plotly==5.1.0
