@@ -47,7 +47,7 @@ sidebar = html.Div(
             [
                 html.Hr(),
                 html.P(
-                    "Descripción del proyecto",
+                    "ML Model to predict employee turnover for Refinancia.",
                     className="lead",
                 ),
             ],

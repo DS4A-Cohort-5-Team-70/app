@@ -6,7 +6,7 @@ import dash_bootstrap_components as dbc
 import plotly.express as px
 
 from app import app
-from views import home, prediction, navbar
+from views import home, prediction, navbar, detail
 
 content = html.Div(id="page-content")
 
@@ -20,6 +20,7 @@ app.validation_layout = html.Div([
     navbar.sidebar_header,
     navbar.sidebar,
     home.main_view,
+    detail.details_page
 ])
 
 
@@ -34,7 +35,7 @@ def render_page_content(pathname):
     elif pathname == "/prediction":
         return prediction.page_2
     elif pathname == "/detail":
-        return html.P("Oh cool, this is page 3!")
+        return detail.details_page
     # If the user tries to reach a different page, return a 404 message
     return dbc.Jumbotron(
         [
@@ -75,6 +76,42 @@ def toggle_collapse(n, is_open):
 def update_chart(x_value):
     fig = px.histogram(home.df_unique, x=x_value, color="LineaNegocio")
     return fig
+
+@app.callback(
+    Output('table-sorting-filtering', 'data'),
+    Input('table-sorting-filtering', "page_current"),
+    Input('table-sorting-filtering', "page_size"),
+    Input('table-sorting-filtering', 'sort_by'),
+    Input('table-sorting-filtering', 'filter_query'))
+def update_table(page_current, page_size, sort_by, filter):
+    filtering_expressions = filter.split(' && ')
+    dff = home.df_unique
+    for filter_part in filtering_expressions:
+        col_name, operator, filter_value = prediction.split_filter_part(filter_part)
+
+        if operator in ('eq', 'ne', 'lt', 'le', 'gt', 'ge'):
+            # these operators match pandas series operator method names
+            dff = dff.loc[getattr(dff[col_name], operator)(filter_value)]
+        elif operator == 'contains':
+            dff = dff.loc[dff[col_name].str.contains(filter_value)]
+        elif operator == 'datestartswith':
+            # this is a simplification of the front-end filtering logic,
+            # only works with complete fields in standard format
+            dff = dff.loc[dff[col_name].str.startswith(filter_value)]
+
+    if len(sort_by):
+        dff = dff.sort_values(
+            [col['column_id'] for col in sort_by],
+            ascending=[
+                col['direction'] == 'asc'
+                for col in sort_by
+            ],
+            inplace=False
+        )
+
+    page = page_current
+    size = page_size
+    return dff.iloc[page * size: (page + 1) * size].to_dict('records')
 
 
 if __name__ == '__main__':
