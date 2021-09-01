@@ -74,7 +74,7 @@ def toggle_collapse(n, is_open):
     Output("histogram", "figure"),
     [Input("x_value", "value")])
 def update_chart(x_value):
-    fig = px.histogram(home.df_unique, x=x_value, color="LineaNegocio")
+    fig = px.histogram(home.df, x=x_value, color="lineanegocio")
     return fig
 
 @app.callback(
@@ -85,7 +85,7 @@ def update_chart(x_value):
     Input('table-sorting-filtering', 'filter_query'))
 def update_table(page_current, page_size, sort_by, filter):
     filtering_expressions = filter.split(' && ')
-    dff = home.df_unique
+    dff = home.df
     for filter_part in filtering_expressions:
         col_name, operator, filter_value = prediction.split_filter_part(filter_part)
 

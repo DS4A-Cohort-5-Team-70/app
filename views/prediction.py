@@ -2,9 +2,10 @@ import dash_core_components as dcc
 import dash_html_components as html
 import dash_table
 from . import home
+import pickle
 
 PAGE_SIZE = 20
-
+random_forest = pickle.load(open('./finalized_model.sav', 'rb'))
 page_2 = html.Div([
     # id, nombre, prob
     html.Div([
@@ -25,7 +26,7 @@ page_2 = html.Div([
                 dash_table.DataTable(
                     id='table-sorting-filtering',
                     columns=[
-                        {'name': i, 'id': i, 'deletable': True} for i in sorted(home.df_unique.columns)
+                        {'name': i, 'id': i, 'deletable': True} for i in sorted(home.df.columns)
                     ],
                     page_current=0,
                     page_size=PAGE_SIZE,

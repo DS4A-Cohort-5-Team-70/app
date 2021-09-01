@@ -1,34 +1,22 @@
 import dash_core_components as dcc
 import dash_html_components as html
 import plotly.express as px
+import psycopg2 as pg
+import os
+from dotenv import load_dotenv
 # Pandas
 import pandas as pd
 
-data_raw = pd.read_csv('./data/asesor.csv',
-                       parse_dates=['Cosecha_Liquidacion', 'Fecha_Ingreso_Operacion', 'Fecha_retiro',
-                                    'FechaNacimiento'], encoding='Latin1')
-data_encuesta = pd.read_csv('data/encuesta.csv', parse_dates=['FechaRegistro', 'Fecha_Retiro'], encoding='Latin1')
+load_dotenv()
+user = os.getenv('DB_MASTER_USER')
+password = os.getenv('DB_PASSWORD')
+host = os.getenv('DB_ENDPOINT')
+db_name = 'raw'
 
-# Renames encuesta.csv DF index columns to match asesor.cv's
-df_encuesta_renamed = data_encuesta.rename(columns={'id_Usuario': 'IdFuncionario'})
-df_encuesta_renamed['Renuncio'] = 1
+engine = pg.connect("host={} dbname={} user={} password={}".format(host, db_name, user, password))
 
-# Merges asesor.csv and encuesta.csv on IdFuncionario columns to get the employees that no longer work for the company
-merged_asesor = data_raw.merge(df_encuesta_renamed, how='left', on='IdFuncionario')
-
-# Fills empty cells on "Renuncio" to 0 in order to indicate employees that are working for the company.
-merged_asesor['Renuncio'].fillna(0, inplace=True)
-
-esta = merged_asesor[merged_asesor['Renuncio'] == 0]
-no_esta = merged_asesor[merged_asesor['Renuncio'] == 1]
-
-esta_grouped = esta.groupby('Cosecha_Liquidacion').sum().reset_index()
-no_esta_grouped = no_esta.groupby('Cosecha_Liquidacion').sum().reset_index()
-
-merged_asesor.sort_values(by=['IdFuncionario', 'Fecha_retiro'], inplace=True)
-df_unique = merged_asesor[merged_asesor.duplicated(subset=['IdFuncionario'], keep='last')]
-df_unique.reset_index(drop=True, inplace=True)
-columns_names = df_unique.columns
+df = pd.read_sql('SELECT * FROM asesor', engine)
+columns_names = df.columns
 
 main_view = html.Div([
 
@@ -119,43 +107,43 @@ main_view = html.Div([
 
             html.Div([
                 html.Div(
-                    dcc.Graph(id="boxplot", figure=px.box(esta, x="Cosecha_Liquidacion", y="Cumpl_Individual"))
+                    dcc.Graph(id="boxplot", figure=px.box(df, x="cosecha_liquidacion", y="meta_recaudo"))
                     , className="col-lg-6 col-sm-12"),
                 html.Div(
-                    dcc.Graph(id="count_genero", figure=px.histogram(merged_asesor, x="Genero"))
+                    dcc.Graph(id="count_genero", figure=px.histogram(df, x="edad"))
                     , className="col-lg-6 col-sm-12")
             ], className="row"),
 
             html.Div([
                 html.Div(
-                    dcc.Graph(id="count_estado_civil", figure=px.histogram(merged_asesor, x="EstadoCivil"))
+                    dcc.Graph(id="count_estado_civil", figure=px.histogram(df, x="canal"))
                     , className="col-lg-6 col-sm-12"),
                 html.Div(
-                    dcc.Graph(id="count_hijos", figure=px.histogram(merged_asesor, x="Hijos"))
+                    dcc.Graph(id="count_hijos", figure=px.histogram(df, x="cantidadhijos"))
                     , className="col-lg-6 col-sm-12"),
             ], className="row"),
 
             html.Div([
                 html.Div(
-                    dcc.Graph(id="count_estrato", figure=px.histogram(merged_asesor, x="Estrato"))
+                    dcc.Graph(id="count_estrato", figure=px.histogram(df, x="segmento"))
                     , className="col-lg-6 col-sm-12"),
                 html.Div(
-                    dcc.Graph(id="count_cantidad_hijos", figure=px.histogram(merged_asesor, x="CantidadHijos"))
+                    dcc.Graph(id="count_cantidad_hijos", figure=px.histogram(df, x="renuncio"))
                     , className="col-lg-6 col-sm-12")
             ], className="row"),
 
             html.Div([
                 html.Div(
-                    dcc.Graph(id="count_vivienda", figure=px.histogram(merged_asesor, x="TipoVivienda"))
+                    dcc.Graph(id="count_vivienda", figure=px.histogram(df, x="vr_comision"))
                     , className="col-lg-6 col-sm-12"),
                 html.Div(
-                    dcc.Graph(id="count_academico", figure=px.histogram(merged_asesor, x="NivelAcademico"))
+                    dcc.Graph(id="count_academico", figure=px.histogram(df, x="lineanegocio"))
                     , className="col-lg-6 col-sm-12")
             ], className="row"),
 
             html.Div([
                 html.Div(
-                    dcc.Graph(id="count_estado", figure=px.histogram(merged_asesor, x="Estado"))
+                    dcc.Graph(id="count_estado", figure=px.histogram(df, x="idfuncionario"))
                     , className="col-lg-6 col-sm-12"),
             ], className="row"),
 
@@ -163,6 +151,6 @@ main_view = html.Div([
 
     ], className="row")
 
-    # dcc.Graph(id="count_num_rot", figure=px.histogram(merged_asesor, x="num_rot")),
-    # dcc.Graph(id="count_edad", figure=px.histogram(merged_asesor, x="Edad"))
+    # dcc.Graph(id="count_num_rot", figure=px.histogram(df, x="num_rot")),
+    # dcc.Graph(id="count_edad", figure=px.histogram(df, x="Edad"))
 ], className="container")
