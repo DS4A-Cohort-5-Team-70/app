@@ -110,16 +110,16 @@ main_view = html.Div([
                     dcc.Graph(id="boxplot", figure=px.box(df, x="cosecha_liquidacion", y="meta_recaudo"))
                     , className="col-lg-6 col-sm-12"),
                 html.Div(
-                    dcc.Graph(id="count_genero", figure=px.histogram(df, x="edad"))
+                    dcc.Graph(id="count_genero", figure=px.histogram(df.groupby('idfuncionario')['edad'].max().to_frame(), x="edad"))
                     , className="col-lg-6 col-sm-12")
             ], className="row"),
 
             html.Div([
                 html.Div(
-                    dcc.Graph(id="count_estado_civil", figure=px.histogram(df, x="canal"))
+                    dcc.Graph(id="count_estado_civil", figure=px.histogram(df.groupby('idfuncionario')['canal'].max().to_frame(), x="canal"))
                     , className="col-lg-6 col-sm-12"),
                 html.Div(
-                    dcc.Graph(id="count_hijos", figure=px.histogram(df, x="cantidadhijos"))
+                    dcc.Graph(id="count_hijos", figure=px.histogram(df.groupby('idfuncionario')['cantidadhijos'].max().to_frame(), x="cantidadhijos"))
                     , className="col-lg-6 col-sm-12"),
             ], className="row"),
 
@@ -134,7 +134,7 @@ main_view = html.Div([
 
             html.Div([
                 html.Div(
-                    dcc.Graph(id="count_vivienda", figure=px.histogram(df, x="vr_comision"))
+                    dcc.Graph(id="count_vivienda", figure=px.line(df.groupby('idfuncionario')['vr_comision'].mean().to_frame().reset_index(), x="idfuncionario", y="vr_comision"))
                     , className="col-lg-6 col-sm-12"),
                 html.Div(
                     dcc.Graph(id="count_academico", figure=px.histogram(df, x="lineanegocio"))

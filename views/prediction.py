@@ -5,7 +5,7 @@ from . import home
 import pickle
 
 PAGE_SIZE = 20
-random_forest = pickle.load(open('./finalized_model.sav', 'rb'))
+#random_forest = pickle.load(open('./finalized_model.sav', 'rb'))
 page_2 = html.Div([
     # id, nombre, prob
     html.Div([
