@@ -11,7 +11,7 @@ load_dotenv()
 user = os.getenv('DB_MASTER_USER')
 password = os.getenv('DB_PASSWORD')
 host = os.getenv('DB_ENDPOINT')
-db_name = 'raw'
+db_name = 'ingestion'
 
 engine = pg.connect("host={} dbname={} user={} password={}".format(host, db_name, user, password))
 
