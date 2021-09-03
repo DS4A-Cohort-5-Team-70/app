@@ -70,48 +70,41 @@ def toggle_collapse(n, is_open):
 
 # Plots
 
-@app.callback(
+""" @app.callback(
     Output("histogram", "figure"),
     [Input("x_value", "value")])
 def update_chart(x_value):
-    fig = px.histogram(home.df, x=x_value, color="lineanegocio")
-    return fig
+    fig = px.histogram(home.unique_employees_df, x=x_value, color="lineanegocio")
+    return fig  """
 
 @app.callback(
-    Output('table-sorting-filtering', 'data'),
-    Input('table-sorting-filtering', "page_current"),
-    Input('table-sorting-filtering', "page_size"),
-    Input('table-sorting-filtering', 'sort_by'),
-    Input('table-sorting-filtering', 'filter_query'))
-def update_table(page_current, page_size, sort_by, filter):
-    filtering_expressions = filter.split(' && ')
-    dff = home.df
-    for filter_part in filtering_expressions:
-        col_name, operator, filter_value = prediction.split_filter_part(filter_part)
-
-        if operator in ('eq', 'ne', 'lt', 'le', 'gt', 'ge'):
-            # these operators match pandas series operator method names
-            dff = dff.loc[getattr(dff[col_name], operator)(filter_value)]
-        elif operator == 'contains':
-            dff = dff.loc[dff[col_name].str.contains(filter_value)]
-        elif operator == 'datestartswith':
-            # this is a simplification of the front-end filtering logic,
-            # only works with complete fields in standard format
-            dff = dff.loc[dff[col_name].str.startswith(filter_value)]
-
-    if len(sort_by):
-        dff = dff.sort_values(
-            [col['column_id'] for col in sort_by],
-            ascending=[
-                col['direction'] == 'asc'
-                for col in sort_by
-            ],
-            inplace=False
-        )
-
-    page = page_current
-    size = page_size
-    return dff.iloc[page * size: (page + 1) * size].to_dict('records')
+    Output("main_histogram", "figure"),
+    Output("pie_renuncia", "figure"),
+    Output("count_edad", "figure"),
+    Output("count_canal", "figure"),
+    Output("count_hijos", "figure"),
+    Output("count_segmento", "figure"),
+    Output("count_renuncio", "figure"),
+    Output("count_comision", "figure"),
+    Output("count_lineanegocio", "figure"),
+    Output("employee_number", "children"),
+    Input("age_slider", "value"), 
+    Input("x_value", "value"),)
+def update_df(age_slider, x_value):
+    filtered_unique_df = home.unique_employees_df.query('{} < edad < {}'.format(age_slider[0], age_slider[1]))
+    filtered_grouped_df = home.grouped_df.query('{} < edad < {}'.format(age_slider[0], age_slider[1]))
+    main_histogram = px.histogram(filtered_unique_df, x=x_value, color="lineanegocio")
+    pie_renuncia = px.pie(filtered_unique_df, names='renuncio', title='Porcentaje de renuncia')
+    count_edad=px.histogram(filtered_unique_df, x="edad")
+    count_canal = px.histogram(filtered_unique_df, x="canal")
+    count_hijos=px.histogram(filtered_unique_df, x="cantidadhijos")
+    count_segmento=px.histogram(filtered_unique_df, x="segmento")
+    count_renuncio = px.histogram(filtered_unique_df, x="renuncio")
+    count_comision = px.line(filtered_unique_df, x='idfuncionario', y='vr_comision', color=filtered_unique_df["renuncio"])
+    count_lineanegocio=px.histogram(filtered_unique_df, x="lineanegocio")
+    employee_number = filtered_unique_df.shape[0]
+    return main_histogram, pie_renuncia, count_edad, count_canal, count_hijos, \
+    count_segmento, count_renuncio,count_comision, count_lineanegocio, employee_number
 
 
 if __name__ == '__main__':

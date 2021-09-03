@@ -24,56 +24,29 @@ page_2 = html.Div([
         html.Div([
             html.Div([
                 dash_table.DataTable(
-                    id='table-sorting-filtering',
+                    id='datatable-interactivity',
                     columns=[
-                        {'name': i, 'id': i, 'deletable': True} for i in sorted(home.df.columns)
+                        {"name": i, "id": i, "deletable": True, "selectable": True} for i in df.columns
                     ],
-                    page_current=0,
-                    page_size=PAGE_SIZE,
-                    page_action='native',
-
-                    filter_action='custom',
-                    filter_query='',
-
-                    sort_action='custom',
-                    sort_mode='multi',
-                    sort_by=[]
-                )
+                    data=home.unique_employees_df.to_dict('records'),
+                    editable=True,
+                    filter_action="native",
+                    sort_action="native",
+                    sort_mode="multi",
+                    column_selectable="single",
+                    row_selectable="multi",
+                    row_deletable=True,
+                    selected_columns=[],
+                    selected_rows=[],
+                    page_action="native",
+                    page_current= 0,
+                    page_size= 10,
+                ),
+                html.Div(id='datatable-interactivity-container')
             ], className="row")
 
         ], className="col-10"),
     ], className="row")
 ], className="container")
 
-operators = [['ge ', '>='],
-             ['le ', '<='],
-             ['lt ', '<'],
-             ['gt ', '>'],
-             ['ne ', '!='],
-             ['eq ', '='],
-             ['contains '],
-             ['datestartswith ']]
 
-
-def split_filter_part(filter_part):
-    for operator_type in operators:
-        for operator in operator_type:
-            if operator in filter_part:
-                name_part, value_part = filter_part.split(operator, 1)
-                name = name_part[name_part.find('{') + 1: name_part.rfind('}')]
-
-                value_part = value_part.strip()
-                v0 = value_part[0]
-                if (v0 == value_part[-1] and v0 in ("'", '"', '`')):
-                    value = value_part[1: -1].replace('\\' + v0, v0)
-                else:
-                    try:
-                        value = float(value_part)
-                    except ValueError:
-                        value = value_part
-
-                # word operators need spaces after them in the filter string,
-                # but we don't want these later
-                return name, operator_type[0].strip(), value
-
-    return [None] * 3

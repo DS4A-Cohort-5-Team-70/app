@@ -60,7 +60,7 @@
     line-height: 1.5;
     color: #212529;
     text-align: left;
-    background-color: #fff;
+    background-color: #ffffff;
   }
   
   [tabindex="-1"]:focus {
@@ -9985,6 +9985,11 @@
       margin-left: 22rem;
       margin-right: 2rem;
       transition: margin-left 0.3s ease-in-out;
+    }
+    .cool-card{
+      box-shadow: 5px 5px 15px #bebebe;
+      border-radius: 15px;
+      border: rgb(231, 231, 231);
     }
   }
 
