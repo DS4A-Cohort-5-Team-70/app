@@ -1,3 +1,4 @@
+.idea/
 .git
 .ipynb_checkpoints/*
 /notebooks/*
