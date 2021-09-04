@@ -19,6 +19,7 @@ engine = pg.connect("host={} dbname={} user={} password={}".format(host, db_name
 df = pd.read_sql('SELECT * FROM asesor', engine)
 columns_names = df.columns
 
+mockup_data = pd.read_csv('./data/mockup-data.csv')
 grouped_df = df.groupby('idfuncionario').mean().reset_index()
 unique_employees_df = df.groupby('idfuncionario').max().reset_index()
 #ages_array = unique_employees_df["edad"]
@@ -30,7 +31,7 @@ main_view = html.Div([
         html.Div([
             html.Div([
                 html.Div([
-                    html.H6("Edad", className="col-12 text-center"),
+                    html.H6("Age", className="col-12 text-center"),
                     dcc.RangeSlider(
                         id="age_slider",
                         min=20,
