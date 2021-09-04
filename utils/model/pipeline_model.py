@@ -1,35 +1,13 @@
 import pickle
-import numpy as np
 import pandas as pd
-from imblearn.over_sampling import SMOTE
-from sklearn.preprocessing import MaxAbsScaler
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split, cross_val_predict
-from sklearn.metrics import classification_report, precision_recall_curve, roc_auc_score, roc_curve, \
-    plot_confusion_matrix, accuracy_score
-from sklearn.model_selection import learning_curve
-
-import graphviz
-import numpy as np
-import pandas as pd
-import seaborn as sns
-from datetime import datetime
-import matplotlib.pyplot as plt
-
-from sklearn import tree
-from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.linear_model import LogisticRegression
-from sklearn.feature_selection import chi2, SelectKBest
-from sklearn.preprocessing import MaxAbsScaler, StandardScaler
-from sklearn.model_selection import train_test_split, cross_val_predict, ShuffleSplit
-from sklearn.metrics import classification_report, precision_recall_curve, roc_auc_score, roc_curve, \
-    plot_confusion_matrix, accuracy_score
+from sklearn.preprocessing import MaxAbsScaler
+from sklearn.model_selection import train_test_split, cross_val_predict
+from sklearn.metrics import classification_report, precision_recall_curve, roc_auc_score, roc_curve, plot_confusion_matrix, accuracy_score
 
 from skopt import BayesSearchCV
 from imblearn.over_sampling import SMOTE
-from skopt.space import Real, Categorical, Integer
+from skopt.space import Categorical, Integer
 
 randomState = 42
 
@@ -45,7 +23,7 @@ def load_data() -> pd.DataFrame:
     return df
 
 
-def scale_df(df: pd.DataFrame) -> pd.DataFrame:
+def preprocess(df: pd.DataFrame) -> pd.DataFrame:
     """
 
     @param df:
@@ -69,18 +47,15 @@ def training(df: pd.DataFrame) -> None:
     oversample = SMOTE()
     X, y = oversample.fit_resample(X, y)
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, stratify=y, random_state=randomState,
-                                                        shuffle=True)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, stratify=y, random_state=randomState, shuffle=True)
 
     params = optimize(DecisionTreeClassifier(), X_train, X_test, y_train, y_test, False)
     clf = DecisionTreeClassifier(**params)
     clf.fit(X, y)
 
     # Dumps model
-    with open('./data/model/model/trained_model.pickle', 'rb') as f:
-        # The protocol version used is detected automatically, so we do not
-        # have to specify it.
-        data = pickle.load(f)
+    with open('./data/model/model/trained_model.pickle', 'wb') as f:
+        pickle.dump(clf, f, pickle.HIGHEST_PROTOCOL)
 
     # Gets metrics
     metrics(clf, X, y)
@@ -98,13 +73,37 @@ def metrics(clf: DecisionTreeClassifier, X: pd.DataFrame, y: pd.Series) -> None:
     # TODO: dump metrics in dataframes
 
     # Learning curve
-    df_learning = pd.DataFrame()
-    cv = ShuffleSplit(n_splits=100, test_size=0.2, random_state=randomState)
-    df_learning['train_sizes'], df_learning['train_scores'], df_learning['test_scores'], df_learning['fit_times'], _ = learning_curve(clf, X, y, cv=cv, n_jobs=-1, train_sizes=np.linspace(.1, 1.0, 5), return_times=True)
+    df_metrics = pd.DataFrame()
+
+    # Preds
+    y_pred = clf.predict(X)
+    y_scores = cross_val_predict(clf, X, y, cv=3, method="predict_proba")[:, 1]
+
+    # Classification Report
+    clf_report = pd.DataFrame(classification_report(y, y_pred, output_dict=True)).transpose()
+    clf_report.to_parquet('./data/model/metrics/clf_report.parquet')
 
     # Accuracy
-    y_pred = clf.predict(X)
+    df_metrics['Accuracy'] = round(accuracy_score(y, y_pred), 3)
+    # ROC AUC
+    df_metrics['ROC - AUC'] = round(roc_auc_score(y, y_scores), 3)
+    df_metrics.to_parquet('./data/model/metrics/basic_metrics.parquet')
 
+    # Precision - Recall
+    df_metrics = pd.DataFrame()
+    df_metrics['Precisions'], df_metrics['Recalls'], _ = precision_recall_curve(y, y_scores)
+    df_metrics.to_parquet('./data/model/metrics/precision_recall.parquet')
+
+    # ROC
+    df_metrics = pd.DataFrame()
+    df_metrics['False Positive Rate'], df_metrics['True Positive Rate'], df_metrics['Thresholds'] = roc_curve(y, y_scores)
+    df_metrics.to_parquet('./data/model/metrics/ROC.parquet')
+
+    # Feature Importance
+    df_metrics = pd.DataFrame()
+    df_metrics['Feature'] = list(X.columns)
+    df_metrics['Feature'] = list(clf.feature_importances_)
+    df_metrics.to_parquet('./data/model/metrics/Feature Importance.parquet')
 
 
 def optimize(clf: DecisionTreeClassifier, X_train: pd.DataFrame, X_test: pd.DataFrame, y_train: pd.Series,
@@ -163,19 +162,15 @@ def inference() -> None:
     max_date = df['Cosecha_Liquidacion'].max()
     df = df[df['Cosecha_Liquidacion'].isin([max_date])]
     df = df[df['Renuncio'].isin([0])]
-    df.drop(['Renuncio'],axis=1, inplace=True)
 
-    # Load model
-    clf = {}
-    # carry out inference
-    preds = clf.predict(df)
+    # Df to store predictions
+    df_preds = df[['IdFuncionario', 'Cosecha_Liquidacion']]
+    df_preds['Cosecha_Liquidacion'] = max_date + pd.DateOffset(months=1)
+    df.drop(['Renuncio', 'IdFuncionario', 'Cosecha_Liquidacion'], axis=1, inplace=True)
 
-    preds.to_parquet('./data/data/serving/')
+    with open('./data/model/model/trained_model.pickle', 'rb') as f:
+        clf = pickle.load(f)
 
-
-def dump_model(clf: DecisionTreeClassifier, path_filename: str) -> None:
-    pickle.dumps()
-
-
-def dump_predictions(df: pd.DataFrame) -> None:
-    df = pd.DataFrame()
+    # Carry out inference
+    df_preds['Probability'] = clf.predict_proba(df)[:, 1]
+    df_preds.to_parquet('./data/data/serving/df_preds.parquet')
