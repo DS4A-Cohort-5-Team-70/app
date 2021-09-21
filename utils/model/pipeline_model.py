@@ -12,12 +12,12 @@ from skopt.space import Categorical, Integer
 randomState = 42
 
 
-def load_data() -> pd.DataFrame:
+def load_data(path_clean_data) -> pd.DataFrame:
     """
 
     @return:
     """
-    df = pd.read_parquet('./data/data/process/df_clean.parquet')
+    df = pd.read_parquet(path_clean_data)
     df.drop(['IdFuncionario', 'Cosecha_Liquidacion'], axis=1, inplace=True)
 
     return df
@@ -35,12 +35,7 @@ def preprocess(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def training(df: pd.DataFrame) -> None:
-    """
-
-    @param df:
-    @return:
-    """
+def training(df: pd.DataFrame, path_to_model: str, metrics_: bool = False) -> None:
     X = df.drop(['Renuncio'], axis=1)
     y = df['Renuncio']
 
@@ -49,16 +44,17 @@ def training(df: pd.DataFrame) -> None:
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, stratify=y, random_state=randomState, shuffle=True)
 
-    params = optimize(DecisionTreeClassifier(), X_train, X_test, y_train, y_test, False)
+    params = optimize(DecisionTreeClassifier(random_state=randomState), X_train, X_test, y_train, y_test, False)
     clf = DecisionTreeClassifier(**params)
     clf.fit(X, y)
 
     # Dumps model
-    with open('./data/model/model/trained_model.pickle', 'wb') as f:
+    with open(path_to_model, 'wb') as f:
         pickle.dump(clf, f, pickle.HIGHEST_PROTOCOL)
 
     # Gets metrics
-    metrics(clf, X, y)
+    if metrics_:
+        metrics(clf, X, y)
 
 
 def metrics(clf: DecisionTreeClassifier, X: pd.DataFrame, y: pd.Series) -> None:
@@ -150,27 +146,33 @@ def optimize(clf: DecisionTreeClassifier, X_train: pd.DataFrame, X_test: pd.Data
             'min_samples_split': 2,
             'min_weight_fraction_leaf': 0.0,
             'presort': 'deprecated',
-            'random_state': 42,
+            'random_state': randomState,
             'splitter': 'best'
         }
 
     return params
 
 
-def inference() -> None:
-    df = pd.read_parquet('./data/data/process/df_clean.parquet')
+def inference(path_to_model: str, path_to_preds: str, path_clean_data: str) -> None:
+    df = pd.read_parquet(path_clean_data)
     max_date = df['Cosecha_Liquidacion'].max()
     df = df[df['Cosecha_Liquidacion'].isin([max_date])]
-    df = df[df['Renuncio'].isin([0])]
+
+    # df = df[df['Renuncio'].isin([0])]
+    y = df['Renuncio']
 
     # Df to store predictions
     df_preds = df[['IdFuncionario', 'Cosecha_Liquidacion']]
     df_preds['Cosecha_Liquidacion'] = max_date + pd.DateOffset(months=1)
     df.drop(['Renuncio', 'IdFuncionario', 'Cosecha_Liquidacion'], axis=1, inplace=True)
 
-    with open('./data/model/model/trained_model.pickle', 'rb') as f:
+    with open(path_to_model, 'rb') as f:
         clf = pickle.load(f)
 
     # Carry out inference
     df_preds['Probability'] = clf.predict_proba(df)[:, 1]
-    df_preds.to_parquet('./data/data/serving/df_preds.parquet')
+    df_preds['y Scores'] = cross_val_predict(clf, df, y, cv=3, method="predict_proba")[:, 1]
+
+    df_preds.to_parquet(path_to_preds)
+
+    return df_preds

@@ -2,9 +2,9 @@ import numpy as np
 import pandas as pd
 
 
-def load_data() -> pd.DataFrame:
+def load_data(path_csv: str) -> pd.DataFrame:
     # TODO: CAMBIAR POR AWS
-    df = pd.read_csv('./data/data/ingestion/asesor.csv',
+    df = pd.read_csv(path_csv,
                      parse_dates=['Fecha_Ingreso_Operacion', 'Fecha_retiro', 'FechaNacimiento'], encoding='Latin1')
     df.sort_values(by=['Cosecha_Ingreso_Operacion', 'IdFuncionario', 'Cosecha_Liquidacion'], inplace=True)
     df.reset_index(drop=True, inplace=True)
